@@ -1,0 +1,38 @@
+server:
+  port: 8015
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3315/facility_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: admin
+    password: admin123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  
+  data:
+    redis:
+      host: localhost
+      port: 6315
+      timeout: 6000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+
+logging:
+  level:
+    com.property: INFO
+
+cache:
+  ttl:
+    inspection-template: 86400000
+    annual-period: 604800000

@@ -1,0 +1,44 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+
+# Build outputs
+dist/
+target/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temp files
+*.tmp
+*.temp
+
+# Screenshots
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Git
+.git/
+.gitignore
