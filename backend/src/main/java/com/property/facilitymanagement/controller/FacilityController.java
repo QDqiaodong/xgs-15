@@ -80,6 +80,8 @@ public class FacilityController {
     public ResponseEntity<Facility> updateFacility(@PathVariable Long id, @RequestBody Facility facility) {
         try {
             return ResponseEntity.ok(facilityService.updateFacility(id, facility));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

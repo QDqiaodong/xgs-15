@@ -3,6 +3,7 @@ package com.property.facilitymanagement.service;
 import com.property.facilitymanagement.entity.Facility;
 import com.property.facilitymanagement.repository.FacilityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -48,13 +49,23 @@ public class FacilityService {
         return facilityRepository.findByBuildingAndFloorAndFacilityType(building, floor, facilityType);
     }
 
+    @CacheEvict(value = "facility", key = "#facility.facilityCode")
     public Facility saveFacility(Facility facility) {
         return facilityRepository.save(facility);
     }
 
+    @CacheEvict(value = "facility", allEntries = true)
     public Facility updateFacility(Long id, Facility facilityDetails) {
         Facility facility = facilityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Facility not found"));
+        String oldCode = facility.getFacilityCode();
+        String newCode = facilityDetails.getFacilityCode();
+        if (newCode != null && !newCode.equals(oldCode)) {
+            Optional<Facility> existingWithCode = facilityRepository.findByFacilityCode(newCode);
+            if (existingWithCode.isPresent() && !existingWithCode.get().getId().equals(id)) {
+                throw new IllegalStateException("Facility code already exists");
+            }
+        }
         facility.setFacilityCode(facilityDetails.getFacilityCode());
         facility.setFacilityName(facilityDetails.getFacilityName());
         facility.setFacilityType(facilityDetails.getFacilityType());
@@ -70,6 +81,7 @@ public class FacilityService {
         return facilityRepository.save(facility);
     }
 
+    @CacheEvict(value = "facility", allEntries = true)
     public void deleteFacility(Long id) {
         facilityRepository.deleteById(id);
     }
