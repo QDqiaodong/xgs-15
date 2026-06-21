@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @Table(name = "facilities", indexes = {
     @Index(name = "idx_facility_type", columnList = "facility_type"),
     @Index(name = "idx_building", columnList = "building"),
+    @Index(name = "idx_floor", columnList = "floor"),
     @Index(name = "idx_facility_code", columnList = "facility_code")
 })
 @Data
@@ -33,6 +34,9 @@ public class Facility {
 
     @Column(name = "building", nullable = false, length = 50)
     private String building;
+
+    @Column(name = "floor")
+    private Integer floor;
 
     @Column(name = "location", length = 200)
     private String location;

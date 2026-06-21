@@ -41,6 +41,13 @@ public class FacilityController {
         return ResponseEntity.ok(facilityService.getFacilitiesByBuilding(building));
     }
 
+    @GetMapping("/building/{building}/floor/{floor}")
+    public ResponseEntity<List<Facility>> getFacilitiesByBuildingAndFloor(
+            @PathVariable String building,
+            @PathVariable Integer floor) {
+        return ResponseEntity.ok(facilityService.getFacilitiesByBuildingAndFloor(building, floor));
+    }
+
     @GetMapping("/type/{facilityType}")
     public ResponseEntity<List<Facility>> getFacilitiesByType(@PathVariable String facilityType) {
         return ResponseEntity.ok(facilityService.getFacilitiesByType(facilityType));
@@ -51,6 +58,14 @@ public class FacilityController {
             @PathVariable String building,
             @PathVariable String facilityType) {
         return ResponseEntity.ok(facilityService.getFacilitiesByBuildingAndType(building, facilityType));
+    }
+
+    @GetMapping("/building/{building}/floor/{floor}/type/{facilityType}")
+    public ResponseEntity<List<Facility>> getFacilitiesByBuildingFloorAndType(
+            @PathVariable String building,
+            @PathVariable Integer floor,
+            @PathVariable String facilityType) {
+        return ResponseEntity.ok(facilityService.getFacilitiesByBuildingFloorAndType(building, floor, facilityType));
     }
 
     @PostMapping

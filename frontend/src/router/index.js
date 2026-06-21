@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
 import FacilityList from '@/views/FacilityList.vue'
 import FacilityForm from '@/views/FacilityForm.vue'
+import FacilityFloorPlan from '@/views/FacilityFloorPlan.vue'
 import InspectionList from '@/views/InspectionList.vue'
 import InspectionForm from '@/views/InspectionForm.vue'
 import MaintenanceList from '@/views/MaintenanceList.vue'
@@ -19,6 +20,11 @@ const routes = [
     path: '/facilities',
     name: 'FacilityList',
     component: FacilityList
+  },
+  {
+    path: '/facilities/floor-plan',
+    name: 'FacilityFloorPlan',
+    component: FacilityFloorPlan
   },
   {
     path: '/facilities/add',

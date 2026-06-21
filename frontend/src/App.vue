@@ -24,6 +24,9 @@
               <el-menu-item index="/facilities" @click="navigate('/facilities')">
                 <span>设施台账</span>
               </el-menu-item>
+              <el-menu-item index="/facilities/floor-plan" @click="navigate('/facilities/floor-plan')">
+                <span>平面台账</span>
+              </el-menu-item>
               <el-menu-item index="/facilities/add" @click="navigate('/facilities/add')">
                 <span>新增设施</span>
               </el-menu-item>

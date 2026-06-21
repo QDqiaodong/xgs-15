@@ -32,12 +32,20 @@ public class FacilityService {
         return facilityRepository.findByBuilding(building);
     }
 
+    public List<Facility> getFacilitiesByBuildingAndFloor(String building, Integer floor) {
+        return facilityRepository.findByBuildingAndFloor(building, floor);
+    }
+
     public List<Facility> getFacilitiesByType(String facilityType) {
         return facilityRepository.findByFacilityType(facilityType);
     }
 
     public List<Facility> getFacilitiesByBuildingAndType(String building, String facilityType) {
         return facilityRepository.findByBuildingAndFacilityType(building, facilityType);
+    }
+
+    public List<Facility> getFacilitiesByBuildingFloorAndType(String building, Integer floor, String facilityType) {
+        return facilityRepository.findByBuildingAndFloorAndFacilityType(building, floor, facilityType);
     }
 
     public Facility saveFacility(Facility facility) {
@@ -51,6 +59,7 @@ public class FacilityService {
         facility.setFacilityName(facilityDetails.getFacilityName());
         facility.setFacilityType(facilityDetails.getFacilityType());
         facility.setBuilding(facilityDetails.getBuilding());
+        facility.setFloor(facilityDetails.getFloor());
         facility.setLocation(facilityDetails.getLocation());
         facility.setInstallationDate(facilityDetails.getInstallationDate());
         facility.setAnnualInspectionCycle(facilityDetails.getAnnualInspectionCycle());

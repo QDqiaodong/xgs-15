@@ -13,11 +13,11 @@ RUN printf '%s\n' \
     '</settings>' \
     > /tmp/maven-settings.xml
 
-RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -q -s /tmp/maven-settings.xml
+RUN mvn dependency:go-offline -q -s /tmp/maven-settings.xml
 
 COPY src ./src
 
-RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -q -s /tmp/maven-settings.xml
+RUN mvn clean package -DskipTests -q -s /tmp/maven-settings.xml
 
 FROM ${DOCKER_REGISTRY}/library/eclipse-temurin:17-jre
 

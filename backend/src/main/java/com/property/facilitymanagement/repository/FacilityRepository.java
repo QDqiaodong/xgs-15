@@ -11,8 +11,10 @@ import java.util.Optional;
 public interface FacilityRepository extends JpaRepository<Facility, Long> {
     Optional<Facility> findByFacilityCode(String facilityCode);
     List<Facility> findByBuilding(String building);
+    List<Facility> findByBuildingAndFloor(String building, Integer floor);
     List<Facility> findByFacilityType(String facilityType);
     List<Facility> findByBuildingAndFacilityType(String building, String facilityType);
+    List<Facility> findByBuildingAndFloorAndFacilityType(String building, Integer floor, String facilityType);
     List<Facility> findByStatus(String status);
     boolean existsByFacilityCode(String facilityCode);
 }

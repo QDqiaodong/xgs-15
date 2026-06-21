@@ -12,6 +12,39 @@ cd "$SCRIPT_DIR"
 
 source .env
 
+find_port() {
+  local port=$1
+  while lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; do
+    echo "端口 $port 已被占用，尝试下一个端口..." >&2
+    port=$((port + 1))
+  done
+  echo "$port"
+}
+
+FRONTEND_PORT=$(find_port "$FRONTEND_PORT")
+BACKEND_PORT=$(find_port "$BACKEND_PORT")
+MYSQL_PORT=$(find_port "$MYSQL_PORT")
+REDIS_PORT=$(find_port "$REDIS_PORT")
+
+cat > .env.runtime <<EOF
+COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
+PROJECT_NAME=${PROJECT_NAME}
+DOCKER_REGISTRY=${DOCKER_REGISTRY}
+FRONTEND_PORT=${FRONTEND_PORT}
+FRONTEND_CONTAINER_NAME=${FRONTEND_CONTAINER_NAME}
+BACKEND_PORT=${BACKEND_PORT}
+BACKEND_CONTAINER_NAME=${BACKEND_CONTAINER_NAME}
+MYSQL_PORT=${MYSQL_PORT}
+MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+MYSQL_DATABASE=${MYSQL_DATABASE}
+MYSQL_USER=${MYSQL_USER}
+MYSQL_PASSWORD=${MYSQL_PASSWORD}
+MYSQL_CONTAINER_NAME=${MYSQL_CONTAINER_NAME}
+REDIS_PORT=${REDIS_PORT}
+REDIS_CONTAINER_NAME=${REDIS_CONTAINER_NAME}
+FRONTEND_URL=http://localhost:${FRONTEND_PORT}
+EOF
+
 echo "检查端口占用情况..."
 
 check_port() {
@@ -40,7 +73,7 @@ check_port "$REDIS_PORT" "Redis"
 echo "端口检查通过，开始启动服务..."
 echo ""
 
-docker-compose up -d --build
+docker compose --env-file .env.runtime up -d --build
 
 echo ""
 echo "等待服务启动..."

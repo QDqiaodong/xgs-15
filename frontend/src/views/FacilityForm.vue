@@ -30,30 +30,25 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="安装位置" prop="location">
-              <el-input v-model="form.location" placeholder="请输入安装位置" />
+            <el-form-item label="所在楼层" prop="floor">
+              <el-input-number v-model="form.floor" :min="0" :max="999" placeholder="请输入楼层" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="安装日期" prop="installationDate">
-              <el-date-picker v-model="form.installationDate" type="date" placeholder="请选择安装日期" />
+            <el-form-item label="安装位置" prop="location">
+              <el-input v-model="form.location" placeholder="请输入安装位置" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="年检周期(月)" prop="annualInspectionCycle">
-              <el-input v-model.number="form.annualInspectionCycle" type="number" placeholder="请输入年检周期" />
+            <el-form-item label="安装日期" prop="installationDate">
+              <el-date-picker v-model="form.installationDate" type="date" placeholder="请选择安装日期" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="form.status" placeholder="请选择状态">
-                <el-option label="正常" value="正常" />
-                <el-option label="维护中" value="维护中" />
-                <el-option label="故障" value="故障" />
-                <el-option label="停用" value="停用" />
-              </el-select>
+            <el-form-item label="年检周期(月)" prop="annualInspectionCycle">
+              <el-input v-model.number="form.annualInspectionCycle" type="number" placeholder="请输入年检周期" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -100,6 +95,7 @@ const form = reactive({
   facilityName: '',
   facilityType: '',
   building: '',
+  floor: null,
   location: '',
   installationDate: '',
   annualInspectionCycle: 12,
