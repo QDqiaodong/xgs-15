@@ -4,8 +4,23 @@
       <el-form :model="form" ref="formRef" label-width="120px" class="facility-form">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="设施编号" prop="facilityCode" :rules="[{required: true, message: '请输入设施编号'}]">
-              <el-input v-model="form.facilityCode" placeholder="请输入设施编号" />
+            <el-form-item label="设施编号" prop="facilityCode">
+              <el-input 
+                v-model="form.facilityCode" 
+                :placeholder="codePlaceholder"
+                :prefix-icon="Warning"
+              >
+                <template #append>
+                  <el-button @click="generateSuggestedCode" :disabled="!canGenerateCode">自动生成</el-button>
+                </template>
+              </el-input>
+              <div v-if="form.facilityType && form.building" class="code-format-hint">
+                格式要求: <el-tag type="info" size="small">{{ expectedFormat }}</el-tag>
+                <span v-if="isSupervisedType" class="supervised-hint">
+                  <el-icon style="color: #f56c6c; vertical-align: middle;"><WarningFilled /></el-icon>
+                  监管类设施
+                </span>
+              </div>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -17,14 +32,14 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="设施类型" prop="facilityType" :rules="[{required: true, message: '请选择设施类型'}]">
-              <el-select v-model="form.facilityType" placeholder="请选择设施类型">
+              <el-select v-model="form.facilityType" placeholder="请选择设施类型" @change="onTypeOrBuildingChange">
                 <el-option v-for="type in facilityTypes" :key="type" :label="type" :value="type" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="所在楼栋" prop="building" :rules="[{required: true, message: '请输入所在楼栋'}]">
-              <el-input v-model="form.building" placeholder="请输入所在楼栋" />
+              <el-input v-model="form.building" placeholder="如: A栋、1号楼" @change="onTypeOrBuildingChange" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -65,7 +80,7 @@
           </el-col>
         </el-row>
         <el-form-item label="备注" prop="remarks">
-          <el-textarea v-model="form.remarks" placeholder="请输入备注" :rows="3" />
+          <el-input v-model="form.remarks" type="textarea" placeholder="请输入备注" :rows="3" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm">保存</el-button>
@@ -77,9 +92,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+import { Warning, WarningFilled } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -89,6 +105,17 @@ const isEdit = ref(false)
 const facilityId = ref(null)
 
 const facilityTypes = ['电梯', '消防柜', '水泵', '监控摄像头', '照明设施', '压力容器']
+
+const typeCodeMap = {
+  '电梯': 'DT',
+  '消防柜': 'XF',
+  '水泵': 'SB',
+  '监控摄像头': 'JK',
+  '照明设施': 'ZM',
+  '压力容器': 'YL'
+}
+
+const supervisedTypes = ['电梯', '消防柜', '压力容器']
 
 const form = reactive({
   facilityCode: '',
@@ -105,8 +132,122 @@ const form = reactive({
   remarks: ''
 })
 
+const existingCodes = ref([])
+
+const isSupervisedType = computed(() => supervisedTypes.includes(form.facilityType))
+
+const canGenerateCode = computed(() => form.facilityType && form.building)
+
+const expectedBuildingCode = computed(() => {
+  if (!form.building) return ''
+  return form.building.replace(/[^0-9A-Za-z]/g, '')
+})
+
+const expectedFormat = computed(() => {
+  const typeCode = typeCodeMap[form.facilityType] || 'XX'
+  const buildingCode = expectedBuildingCode.value || '楼栋代码'
+  return `${typeCode}-${buildingCode}-XXX`
+})
+
+const codePlaceholder = computed(() => {
+  if (form.facilityType && form.building) {
+    return `请输入编号，如: ${expectedFormat.value}`
+  }
+  return '请选择类型和楼栋后填写'
+})
+
+const fetchExistingCodes = async () => {
+  try {
+    const res = await axios.get('/api/facilities')
+    existingCodes.value = res.data.map(f => f.facilityCode)
+  } catch (error) {
+    console.error('获取设施编号列表失败:', error)
+  }
+}
+
+const generateSuggestedCode = async () => {
+  const typeCode = typeCodeMap[form.facilityType]
+  const buildingCode = expectedBuildingCode.value
+  if (!typeCode || !buildingCode) return
+
+  const prefix = `${typeCode}-${buildingCode}-`
+  const regex = new RegExp(`^${prefix}(\\d+)$`)
+
+  try {
+    if (existingCodes.value.length === 0) {
+      await fetchExistingCodes()
+    }
+  } catch (e) {}
+
+  let maxSeq = 0
+  existingCodes.value.forEach(code => {
+    const match = code.match(regex)
+    if (match) {
+      const seq = parseInt(match[1], 10)
+      if (seq > maxSeq) maxSeq = seq
+    }
+  })
+
+  const nextSeq = (maxSeq + 1).toString().padStart(3, '0')
+  form.facilityCode = `${prefix}${nextSeq}`
+}
+
+const validateFacilityCode = async (rule, value, callback) => {
+  if (!value || !value.trim()) {
+    callback(new Error('请输入设施编号'))
+    return
+  }
+  if (!form.facilityType) {
+    callback(new Error('请先选择设施类型'))
+    return
+  }
+  if (!form.building) {
+    callback(new Error('请先输入所在楼栋'))
+    return
+  }
+  const typeCode = typeCodeMap[form.facilityType]
+  const buildingCode = expectedBuildingCode.value
+  if (!typeCode || !buildingCode) {
+    callback(new Error('设施类型或楼栋名称无效'))
+    return
+  }
+  const regex = new RegExp(`^${typeCode}-${buildingCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-\\d{3,}$`)
+  if (!regex.test(value)) {
+    callback(new Error(`格式错误，应为: ${typeCode}-${buildingCode}-XXX(至少3位序号)`))
+    return
+  }
+
+  try {
+    if (existingCodes.value.length === 0) {
+      await fetchExistingCodes()
+    }
+  } catch (e) {}
+
+  const isDuplicate = existingCodes.value.some(code => {
+    if (isEdit.value && code === value && form.facilityCode === route.params.id) return false
+    return code === value && (!isEdit.value || code !== originalCode.value)
+  })
+
+  if (isDuplicate) {
+    callback(new Error('该设施编号已存在，禁止重复编号进入台账'))
+    return
+  }
+
+  callback()
+}
+
+const originalCode = ref('')
+
+const onTypeOrBuildingChange = () => {}
+
 const submitForm = async () => {
   try {
+    const customRules = {
+      facilityCode: [
+        { required: true, validator: validateFacilityCode, trigger: 'blur' }
+      ]
+    }
+    formRef.value.rules = { ...formRef.value.rules, ...customRules }
     await formRef.value.validate()
     if (isEdit.value) {
       await axios.put(`/api/facilities/${facilityId.value}`, form)
@@ -118,8 +259,10 @@ const submitForm = async () => {
     router.push('/facilities')
   } catch (error) {
     if (error.response?.status === 409) {
-      elError('设施编号已存在')
-    } else {
+      elError(error.response.data || '设施编号已存在')
+    } else if (error.response?.status === 400) {
+      elError(error.response.data || '设施编号格式错误')
+    } else if (error !== undefined && !error?.field) {
       elError('操作失败')
     }
   }
@@ -133,6 +276,7 @@ const fetchFacility = async (id) => {
   try {
     const res = await axios.get(`/api/facilities/${id}`)
     Object.assign(form, res.data)
+    originalCode.value = res.data.facilityCode
     if (form.installationDate) {
       form.installationDate = new Date(form.installationDate).toISOString().split('T')[0]
     }
@@ -153,11 +297,12 @@ const elError = (message) => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchExistingCodes()
   if (route.params.id) {
     isEdit.value = true
     facilityId.value = route.params.id
-    fetchFacility(route.params.id)
+    await fetchFacility(route.params.id)
   }
 })
 </script>
@@ -171,5 +316,18 @@ onMounted(() => {
 
 .facility-form {
   padding: 20px;
+}
+
+.code-format-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.supervised-hint {
+  color: #f56c6c;
+  font-weight: 600;
 }
 </style>

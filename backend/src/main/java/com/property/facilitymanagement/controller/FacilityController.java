@@ -1,5 +1,6 @@
 package com.property.facilitymanagement.controller;
 
+import com.property.facilitymanagement.dto.FacilityDTO;
 import com.property.facilitymanagement.entity.Facility;
 import com.property.facilitymanagement.service.FacilityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +19,13 @@ public class FacilityController {
     private FacilityService facilityService;
 
     @GetMapping
-    public ResponseEntity<List<Facility>> getAllFacilities() {
+    public ResponseEntity<List<FacilityDTO>> getAllFacilities() {
         return ResponseEntity.ok(facilityService.getAllFacilities());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Facility> getFacilityById(@PathVariable Long id) {
-        return facilityService.getFacilityById(id)
+    public ResponseEntity<FacilityDTO> getFacilityById(@PathVariable Long id) {
+        return facilityService.getFacilityDTOById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -37,31 +38,31 @@ public class FacilityController {
     }
 
     @GetMapping("/building/{building}")
-    public ResponseEntity<List<Facility>> getFacilitiesByBuilding(@PathVariable String building) {
+    public ResponseEntity<List<FacilityDTO>> getFacilitiesByBuilding(@PathVariable String building) {
         return ResponseEntity.ok(facilityService.getFacilitiesByBuilding(building));
     }
 
     @GetMapping("/building/{building}/floor/{floor}")
-    public ResponseEntity<List<Facility>> getFacilitiesByBuildingAndFloor(
+    public ResponseEntity<List<FacilityDTO>> getFacilitiesByBuildingAndFloor(
             @PathVariable String building,
             @PathVariable Integer floor) {
         return ResponseEntity.ok(facilityService.getFacilitiesByBuildingAndFloor(building, floor));
     }
 
     @GetMapping("/type/{facilityType}")
-    public ResponseEntity<List<Facility>> getFacilitiesByType(@PathVariable String facilityType) {
+    public ResponseEntity<List<FacilityDTO>> getFacilitiesByType(@PathVariable String facilityType) {
         return ResponseEntity.ok(facilityService.getFacilitiesByType(facilityType));
     }
 
     @GetMapping("/building/{building}/type/{facilityType}")
-    public ResponseEntity<List<Facility>> getFacilitiesByBuildingAndType(
+    public ResponseEntity<List<FacilityDTO>> getFacilitiesByBuildingAndType(
             @PathVariable String building,
             @PathVariable String facilityType) {
         return ResponseEntity.ok(facilityService.getFacilitiesByBuildingAndType(building, facilityType));
     }
 
     @GetMapping("/building/{building}/floor/{floor}/type/{facilityType}")
-    public ResponseEntity<List<Facility>> getFacilitiesByBuildingFloorAndType(
+    public ResponseEntity<List<FacilityDTO>> getFacilitiesByBuildingFloorAndType(
             @PathVariable String building,
             @PathVariable Integer floor,
             @PathVariable String facilityType) {
@@ -69,19 +70,27 @@ public class FacilityController {
     }
 
     @PostMapping
-    public ResponseEntity<Facility> createFacility(@RequestBody Facility facility) {
-        if (facilityService.existsByCode(facility.getFacilityCode())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    public ResponseEntity<?> createFacility(@RequestBody Facility facility) {
+        try {
+            if (facilityService.existsByCode(facility.getFacilityCode())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("设施编号已存在，禁止重复编号进入台账");
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(facilityService.saveFacility(facility));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(facilityService.saveFacility(facility));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Facility> updateFacility(@PathVariable Long id, @RequestBody Facility facility) {
+    public ResponseEntity<?> updateFacility(@PathVariable Long id, @RequestBody Facility facility) {
         try {
             return ResponseEntity.ok(facilityService.updateFacility(id, facility));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("设施编号已存在，禁止重复编号进入台账");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

@@ -33,12 +33,16 @@
                 v-for="facility in getFacilitiesByBuilding(building)" 
                 :key="facility.id" 
                 class="facility-card"
+                :class="{ 'supervised-card': facility.isSupervised }"
                 @click="viewFacility(facility)"
               >
                 <div class="facility-header">
                   <span class="facility-icon">{{ getTypeIcon(facility.facilityType) }}</span>
                   <div class="facility-info">
-                    <div class="facility-code">{{ facility.facilityCode }}</div>
+                    <div class="facility-code-row">
+                      <span class="facility-code">{{ facility.facilityCode }}</span>
+                      <el-tag v-if="facility.isSupervised" type="danger" size="small" effect="dark" class="supervised-tag">监管类</el-tag>
+                    </div>
                     <div class="facility-name">{{ facility.facilityName }}</div>
                   </div>
                   <el-tag :type="getStatusType(facility.status)">{{ facility.status }}</el-tag>
@@ -58,7 +62,35 @@
                   </div>
                   <div class="facility-detail">
                     <span class="detail-label">年检周期:</span>
-                    <span class="detail-value">{{ facility.annualInspectionCycle }}个月</span>
+                    <span class="detail-value">
+                      <el-tag type="primary" size="small" effect="plain">
+                        {{ facility.annualInspectionCycle || '-' }}个月
+                      </el-tag>
+                    </span>
+                  </div>
+                  <div class="facility-detail">
+                    <span class="detail-label">下次年检:</span>
+                    <span class="detail-value">
+                      <el-tag :type="getNextInspectionTagType(facility.nextAnnualInspectionDate)" size="small">
+                        {{ formatDate(facility.nextAnnualInspectionDate) || '-' }}
+                      </el-tag>
+                    </span>
+                  </div>
+                  <div class="facility-detail">
+                    <span class="detail-label">最近巡检:</span>
+                    <span class="detail-value">
+                      <el-tag :type="getInspectionResultType(facility.latestInspectionResult)" size="small">
+                        {{ facility.latestInspectionResult || '-' }}
+                      </el-tag>
+                    </span>
+                  </div>
+                  <div class="facility-detail">
+                    <span class="detail-label">维修状态:</span>
+                    <span class="detail-value">
+                      <el-tag :type="getMaintenanceStatusType(facility.latestMaintenanceStatus)" size="small">
+                        {{ facility.latestMaintenanceStatus || '-' }}
+                      </el-tag>
+                    </span>
                   </div>
                 </div>
                 <div class="facility-actions">
@@ -139,6 +171,37 @@ const getStatusType = (status) => {
     '维护中': 'warning',
     '故障': 'danger',
     '停用': 'info'
+  }
+  return types[status] || 'info'
+}
+
+const getNextInspectionTagType = (date) => {
+  if (!date) return 'info'
+  const today = new Date()
+  const target = new Date(date)
+  const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) return 'danger'
+  if (diffDays <= 30) return 'warning'
+  return 'success'
+}
+
+const getInspectionResultType = (result) => {
+  const types = {
+    '正常': 'success',
+    '待整改': 'warning',
+    '异常': 'danger',
+    '未巡检': 'info'
+  }
+  return types[result] || 'info'
+}
+
+const getMaintenanceStatusType = (status) => {
+  const types = {
+    '待维修': 'warning',
+    '维修中': 'primary',
+    '已完成': 'success',
+    '已验收': 'success',
+    '无维修记录': 'info'
   }
   return types[status] || 'info'
 }
@@ -254,7 +317,7 @@ onMounted(() => {
 
 .facility-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 16px;
   padding: 16px;
 }
@@ -262,10 +325,16 @@ onMounted(() => {
 .facility-card {
   cursor: pointer;
   transition: all 0.3s;
+  border: 1px solid #ebeef5;
 }
 
 .facility-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.supervised-card {
+  border: 2px solid #f56c6c;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
 }
 
 .facility-header {
@@ -283,10 +352,20 @@ onMounted(() => {
   flex: 1;
 }
 
+.facility-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .facility-code {
   font-size: 16px;
   font-weight: bold;
   color: #333;
+}
+
+.supervised-tag {
+  margin-left: 0;
 }
 
 .facility-name {
@@ -303,12 +382,14 @@ onMounted(() => {
 .facility-detail {
   display: flex;
   margin: 6px 0;
+  align-items: center;
 }
 
 .detail-label {
   width: 70px;
   color: #999;
   font-size: 13px;
+  flex-shrink: 0;
 }
 
 .detail-value {
