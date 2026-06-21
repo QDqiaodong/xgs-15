@@ -3,6 +3,7 @@ import Home from '@/views/Home.vue'
 import FacilityList from '@/views/FacilityList.vue'
 import FacilityForm from '@/views/FacilityForm.vue'
 import FacilityFloorPlan from '@/views/FacilityFloorPlan.vue'
+import FacilityQRCode from '@/views/FacilityQRCode.vue'
 import InspectionList from '@/views/InspectionList.vue'
 import InspectionForm from '@/views/InspectionForm.vue'
 import MaintenanceList from '@/views/MaintenanceList.vue'
@@ -35,6 +36,16 @@ const routes = [
     path: '/facilities/:id/edit',
     name: 'FacilityEdit',
     component: FacilityForm
+  },
+  {
+    path: '/facilities/qrcode',
+    name: 'FacilityQRCodeByQuery',
+    component: FacilityQRCode
+  },
+  {
+    path: '/facilities/qrcode/:id',
+    name: 'FacilityQRCodeById',
+    component: FacilityQRCode
   },
   {
     path: '/inspections',
