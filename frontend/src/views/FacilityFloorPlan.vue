@@ -355,17 +355,19 @@ const formatDate = (date) => {
   return date ? new Date(date).toLocaleDateString('zh-CN') : '-'
 }
 
+const getFacilityRoom = (facility) => {
+  const location = facility.location || ''
+  if (location.includes('设备间') || location.includes('泵房') || location.includes('机房')) return '设备间'
+  if (location.includes('办公区')) return '办公区'
+  if (location.includes('东') || location.includes('大厅') || location.includes('货梯厅')) return '东侧区域'
+  if (location.includes('西')) return '西侧区域'
+  if (location.includes('北')) return '北侧区域'
+  if (location.includes('南') || location.includes('入口') || location.includes('生产区') || location.includes('车间') || location.includes('走廊')) return '南侧区域'
+  return null
+}
+
 const getRoomFacilities = (roomName) => {
-  return currentFloorFacilities.value.filter(f => {
-    const location = f.location || ''
-    if (roomName === '设备间' && (location.includes('设备间') || location.includes('泵房') || location.includes('机房'))) return true
-    if (roomName === '办公区' && location.includes('办公区')) return true
-    if (roomName === '东侧区域' && (location.includes('东') || location.includes('大厅') || location.includes('货梯厅'))) return true
-    if (roomName === '西侧区域' && location.includes('西')) return true
-    if (roomName === '北侧区域' && location.includes('北')) return true
-    if (roomName === '南侧区域' && (location.includes('南') || location.includes('入口') || location.includes('生产区') || location.includes('车间') || location.includes('走廊'))) return true
-    return false
-  })
+  return currentFloorFacilities.value.filter(f => getFacilityRoom(f) === roomName)
 }
 
 const hasCorridor = (type) => {

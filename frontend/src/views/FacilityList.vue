@@ -27,7 +27,7 @@
     <el-card>
       <div class="building-tabs">
         <el-tabs v-model="activeBuilding" @tab-change="handleBuildingChange">
-          <el-tab-pane v-for="building in buildingGroups" :key="building" :label="building">
+          <el-tab-pane v-for="building in buildingGroups" :key="building" :label="building" :name="building">
             <div class="facility-grid">
               <el-card 
                 v-for="facility in getFacilitiesByBuilding(building)" 
@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { Search, Plus } from '@element-plus/icons-vue'
@@ -151,7 +151,19 @@ const searchFacilities = () => {
 }
 
 const handleBuildingChange = () => {
+  nextTick(() => {
+    const tabsContainer = document.querySelector('.building-tabs')
+    if (tabsContainer) {
+      tabsContainer.scrollTop = 0
+    }
+  })
 }
+
+watch(buildingGroups, (newGroups) => {
+  if (newGroups.length > 0 && !newGroups.includes(activeBuilding.value)) {
+    activeBuilding.value = newGroups[0]
+  }
+})
 
 const goToAdd = () => {
   router.push('/facilities/add')
