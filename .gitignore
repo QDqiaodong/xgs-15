@@ -88,5 +88,8 @@ data/minio/
 
 # ====================== 10、本地打包发布产物 ======================
 **/release/*.tar.gz
-frontend/package-lock.json
 
+# ====================== 11、本地启动与容器构建文件 ======================
+backend/Dockerfile
+start.sh
+frontend/package-lock.json
